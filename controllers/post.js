@@ -5,12 +5,16 @@ import cloudinaryFn from "../cloudinary.js";
 //CRUD Operations are carried out in controllers
 
 export const getPosts = (req, res) => {
+  //console.warn(req.query.cat);
   const q = req.query.cat
-    ? `SELECT * FROM posts WHERE cat=${req.query.cat}`
+    ? `SELECT * FROM posts WHERE cat = ?`
     : "SELECT * FROM posts";
   try {
-    db.query(q, (err, data) => {
-      if (err) return res.status(500).send(err);
+    db.query(q, [req.query.cat], (err, data) => {
+      if (err) {
+        //console.warn(err);
+        return res.status(500).send(err);
+      }
       return res.status(200).json(data);
     });
   } catch (error) {
@@ -30,7 +34,7 @@ export const getPost = (req, res) => {
 };
 
 export const addPost = async (req, res) => {
-  // const returnedUlr = await cloudinaryFn(req.body.imgUrl);
+  const returnedUlr = await cloudinaryFn(req.body.img);
   // const q = "INSERT INTO posts(`title`, `img`, `cat`) VALUES (?)";
   // const values = [req.body.title, returnedUlr, req.body.cat];
   // db.query(q, [values], (err, data) => {
@@ -42,7 +46,7 @@ export const addPost = async (req, res) => {
   const token = req.headers.access_token;
   if (!token) return res.status(401).json("Not authenticated!");
 
-  console.log(res);
+  console.log(returnedUlr);
 
   jwt.verify(token, "jwtkey", (err, userInfo) => {
     if (err) return res.status(403).json("Token is not valid!");
@@ -53,7 +57,7 @@ export const addPost = async (req, res) => {
     const values = [
       req.body.title,
       req.body.desc,
-      req.body.img,
+      returnedUlr,
       req.body.cat,
       req.body.date,
       userInfo.id,
